@@ -38,11 +38,45 @@ func GenerateToken(context *gin.Context) {
 		return
 	}
 
-	tokenString, err:= auth.GenerateJWT(user.Email, user.Username)
+	tokenString, refreshTokenString, err := auth.GenerateJWT(user.Email, user.Username)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		context.Abort()
 		return
 	}
-	context.JSON(http.StatusOK, gin.H{"token": tokenString})
+	context.JSON(http.StatusOK, gin.H{"token": tokenString, "refresh_token": refreshTokenString})
+}
+
+func RefreshToken(context *gin.Context) {
+	var request struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := context.ShouldBindJSON(&request); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.Abort()
+		return
+	}
+
+	if err := auth.ValidateRefreshToken(request.RefreshToken); err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		context.Abort()
+		return
+	}
+
+	claims := &auth.JWTClaim{}
+	if err := auth.ValidateRefreshToken(request.RefreshToken); err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		context.Abort()
+		return
+	}
+
+	claims, _ = auth.GetClaimsFromRefreshToken(request.RefreshToken)
+
+	tokenString, refreshTokenString, err := auth.GenerateJWT(claims.Email, claims.Username)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		context.Abort()
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"token": tokenString, "refresh_token": refreshTokenString})
 }

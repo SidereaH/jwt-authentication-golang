@@ -1,18 +1,17 @@
 package database
 
 import (
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"jwt-authentication-golang/models"
 	"log"
-
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 var Instance *gorm.DB
 var dbError error
 
-func Connect(connectionString string) () {
-	Instance, dbError = gorm.Open(mysql.Open(connectionString), &gorm.Config{})
+func Connect(connectionString string) {
+	Instance, dbError = gorm.Open(postgres.Open(connectionString), &gorm.Config{})
 	if dbError != nil {
 		log.Fatal(dbError)
 		panic("Cannot connect to DB")

@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Initialize Database
-	database.Connect("root:root@tcp(localhost:3306)/jwt_demo?parseTime=true")
+	database.Connect("host=localhost user=postgres password=postgres dbname=go_jwt_gorm port=5433 sslmode=disable TimeZone=Europe/Moscow")
 	database.Migrate()
 
 	// Initialize Router
@@ -24,6 +24,7 @@ func initRouter() *gin.Engine {
 	{
 		api.POST("/token", controllers.GenerateToken)
 		api.POST("/user/register", controllers.RegisterUser)
+		api.POST("/token/refresh", controllers.RefreshToken)
 		secured := api.Group("/secured").Use(middlewares.Auth())
 		{
 			secured.GET("/ping", controllers.Ping)
